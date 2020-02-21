@@ -1,0 +1,14 @@
+<template>
+    <div style="height: 300px;">
+        <lightning-card  title="Saved Carts">       
+                <lightning-datatable
+                    max-row-selection="1"
+                    key-field="Id"
+                    data={savedCarts}
+                    columns={columns}
+                    onrowselection={handleSelection}
+                    selected-rows={selectedRows}>
+                </lightning-datatable> 
+        </lightning-card>
+    </div>  
+</template>

@@ -1,0 +1,33 @@
+<template>
+
+    <template if:true={isLoading}>
+        <div>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+        </div>
+    </template>
+
+    <lightning-card>
+        <h3 slot="title">
+            Shopping Cart Total {total}
+        </h3>
+        <template if:true={cartId}>
+            <lightning-button label="Add Product" slot="actions" onclick={handleAddProduct}></lightning-button>
+            <lightning-button label="Add Package" slot="actions" onclick={handleAddPackage}></lightning-button>
+            <lightning-button variant="destructive" label="Delete Cart" slot="actions" onclick={handleDeleteCart}></lightning-button>
+        </template>
+        <lightning-button variant="brand" label="New Cart" slot="actions" onclick={handleNewCart}></lightning-button>
+            <lightning-datatable
+                hide-checkbox-column
+                key-field="id"
+                data={products}
+                columns={columns}
+                onrowaction={handleRowAction}>
+            </lightning-datatable>
+    </lightning-card>
+
+    <template if:true={showModal}>
+        <c-custom-modal object-type={objectType} title={title} fields={fields} record-id={lineItemId}
+          field-defaults={fieldDefaults} onsubmit={submitHandler} onsuccess={successHandler} onerror={errorHandler} onclose={closeHandler}></c-custom-modal>
+    </template>
+    
+</template>
