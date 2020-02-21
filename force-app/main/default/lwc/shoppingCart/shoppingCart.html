@@ -11,8 +11,10 @@
             Shopping Cart Total {total}
         </h3>
         <template if:true={cartId}>
-            <lightning-button label="Add Product" slot="actions" onclick={handleAddProduct}></lightning-button>
-            <lightning-button label="Add Package" slot="actions" onclick={handleAddPackage}></lightning-button>
+            <lightning-button-menu alternative-text="Show menu" slot="actions" variant="border-filled" icon-name="utility:add" class="slds-m-left_large">
+                <lightning-menu-item value="AddProduct" label="Add Product" onclick={handleAddProduct}></lightning-menu-item>
+                <lightning-menu-item value="AddPackage" label="Add Package" onclick={handleAddPackage}></lightning-menu-item>
+            </lightning-button-menu>
             <lightning-button variant="destructive" label="Delete Cart" slot="actions" onclick={handleDeleteCart}></lightning-button>
         </template>
         <lightning-button variant="brand" label="New Cart" slot="actions" onclick={handleNewCart}></lightning-button>
