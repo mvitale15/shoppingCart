@@ -16,10 +16,10 @@ const actions = [
 ];
 
 const columns = [
-    { label: 'Product', fieldName: 'Name' },
-    { label: 'Quantity', fieldName: 'Quantity', type: 'number' },
-    { label: 'Price', fieldName: 'Price', type: 'currency' },
-    { label: 'Total', fieldName: 'Total', type: 'currency'},
+    { label: 'Product', fieldName: 'Name', sortable: true },
+    { label: 'Quantity', fieldName: 'Quantity', type: 'number', sortable: true },
+    { label: 'Price', fieldName: 'Price', type: 'currency', sortable: true },
+    { label: 'Total', fieldName: 'Total', type: 'currency', sortable: true },
     {
         type: 'action',
         typeAttributes: { rowActions: actions }
@@ -33,13 +33,15 @@ export default class ShoppingCart extends LightningElement {
     title;
     total = '$0.00';
     lineItemId;
+    fields;
     fieldDefaults;
     objectType;
     products = [];
-
     columns = columns;
-    newFields = [PRODUCT_FIELD, QUANTITY_FIELD];
-    editFields = [PRODUCT_FIELD, PRICE_FIELD, QUANTITY_FIELD];
+    defaultSortDirection = 'asc';
+    sortDirection = 'asc';
+    sortedBy;
+
 
     @wire(CurrentPageReference) pageRef;
 
@@ -59,27 +61,27 @@ export default class ShoppingCart extends LightningElement {
     updateProductsList() {
         this.products = [];
 
-        if(this.cartId){
+        if (this.cartId) {
             getRelatedProducts({ cartId: this.cartId })
-            .then(result => {
-                let total = 0;
+                .then(result => {
+                    let total = 0;
 
-                result.forEach(el => {
-                    this.products.push({
-                        Id: el.Id,
-                        Quantity: el.Quantity__c,
-                        Price: el.Price__c,
-                        Total: el.Total__c,
-                        Name: el.Product__r.Name
+                    result.forEach(el => {
+                        this.products.push({
+                            Id: el.Id,
+                            Quantity: el.Quantity__c,
+                            Price: el.Price__c,
+                            Total: el.Total__c,
+                            Name: el.Product__r.Name
+                        });
+                        total += el.Total__c;
                     });
-                    total+=el.Total__c;
-                });
-                this.products = [...this.products];
-                this.total = '$' + total.toFixed(2);
-            })
-            .catch(error => {
-                console.error(error);
-            })
+                    this.products = [...this.products];
+                    this.total = '$' + total.toFixed(2);
+                })
+                .catch(error => {
+                    console.error(error);
+                })
         }
     }
 
@@ -101,8 +103,9 @@ export default class ShoppingCart extends LightningElement {
 
     handleAddProduct(event) {
         let defaults = [{ "Cart__c": this.cartId }];
+        let modalFields = [PRODUCT_FIELD, QUANTITY_FIELD];
 
-        this.openModal('Add Product', 'Cart_Product_Relationship__c', '', this.newFields, defaults);
+        this.openModal('Add Product', 'Cart_Product_Relationship__c', '', modalFields, defaults);
     }
 
     handleAddPackage(event) {
@@ -111,7 +114,7 @@ export default class ShoppingCart extends LightningElement {
         this.openModal('Add Package', 'Cart_Package_Relationship__c', '', [PACKAGE_FIELD], defaults);
     }
 
-    handleDeleteCart(event){
+    handleDeleteCart(event) {
         this.delete(this.cartId);
 
         fireEvent(this.pageRef, 'deleteCart', this.cartId);
@@ -130,7 +133,8 @@ export default class ShoppingCart extends LightningElement {
                 this.delete(row.Id);
                 break;
             case 'edit':
-                this.openModal('Edit', 'Cart_Product_Relationship__c', row.Id, this.editFields, null);
+                let modalFields = [PRODUCT_FIELD, PRICE_FIELD, QUANTITY_FIELD];
+                this.openModal('Edit', 'Cart_Product_Relationship__c', row.Id, modalFields, null);
                 break;
             default:
         }
@@ -186,4 +190,31 @@ export default class ShoppingCart extends LightningElement {
     closeModal() {
         this.showModal = false
     }
+
+    sortBy(field, reverse, primer) {
+        const key = primer
+            ? function (x) {
+                return primer(x[field]);
+            }
+            : function (x) {
+                return x[field];
+            };
+
+        return function (a, b) {
+            a = key(a);
+            b = key(b);
+            return reverse * ((a > b) - (b > a));
+        };
+    }
+
+    onHandleSort(event) {
+        const { fieldName: sortedBy, sortDirection } = event.detail;
+        const cloneData = [...this.products];
+
+        cloneData.sort(this.sortBy(sortedBy, sortDirection === 'asc' ? 1 : -1));
+        this.products = cloneData;
+        this.sortDirection = sortDirection;
+        this.sortedBy = sortedBy;
+    }
+
 }
